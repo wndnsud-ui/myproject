@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-3">
+
+<form method="post" class="post-form">
+    {{ form.csrf_token}}
+    {% include "form_errors.html" %}
+
+  <div class="mb-3">
+    <label for="username" >사용자 이름</label>
+    {{ form.username(class="form-control")}}   
+  </div>
+
+  <div class="mb-3">
+    <label for="password1" >비밀번호</label>
+    {{ form.password1(class="form-control")}}   
+  </div>  
+
+  <div class="mb-3">
+    <label for="password2" >비밀번호확인</label>
+    {{ form.password2(class="form-control")}}   
+  </div>  
+ 
+  <div class="mb-3">
+    <label for="email" >이메일</label>
+    {{ form.email(class="form-control")}}   
+  </div>  
+
+  
+  <button type="submit" class="btn btn-primary">등록하기</button>
+</form>    
+</div>
+{% endblock %}    

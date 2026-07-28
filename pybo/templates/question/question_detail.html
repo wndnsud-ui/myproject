@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% block content %}
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"> -->
+<div class="container my-3">
+    <!-- 1. 질문 본문 영역(질문 제목, 내용, 작성자 정보) -->
+    <h2 class="border-bottom py-2">{{question.subject}}</h2>
+
+    <div class="card my-3">
+        <div class="card-body">
+            <!-- 질문 내용 -->
+            <div class="card-text" style="white-space: pre-line;">{{question.content}}</div>
+
+            <!-- 질문 작성자& 작성시간 -->
+            <div class="d-flex justify-content-end">
+                <div class="badge text-bg-light p-2 text-start">
+                    <div class="mb-2">{{question.user.username }}</div>
+                    <div class="mb-2">asked at</div>
+                    <div>{{question.create_date|datetime}}</div>
+                </div>
+            </div>
+
+
+
+            <!-- 질문 수정/삭제 버튼 (글쓴이 본인일떄만 표시) (7/27) -->
+            <div class="my-3">
+                <!-- 질문추천 버튼 만들기(7/28) -->
+                <a href="javascript:void(0)"
+                        data-uri="{{ url_for('question.vote',  question_id=question.id)}}" class="recommend btn btn-sm btn-outline-secondary">추천
+                        <!-- 추천수 뱃지 (추천인 인원수 표시) -->
+                    <span class="badge rounded-pill bg-success">{{  question.voter|length }}</span></a>
+
+
+                {% if g.user == question.user %}
+                <a href="{{ url_for('question.modify', question_id=question.id) }}"
+                    class="btn btn-sm btn-outline-secondary">수정</a>
+
+                <!-- 여기삭제 테그 생성(7/27) -->
+                <a href="javascript:void(0)" data-uri="{{ url_for('question.delete', question_id=question.id) }}"
+                    class="delete btn btn-sm btn-outline-secondary">삭제</a>
+                {% endif %}
+            </div>
+        </div>
+        <!-- </div> 이거 주석 처리 해서 카드박스 하나로 통일함-->
+        <!-- 2. 질문 전용 댓글 영역 (질문에 달린 댓글 목록) -->
+        <!-- 질문 상세 템플릿에 질문 댓글 UI 추가 (7/28) -->
+        <!-- <div class="card my-3"> 이거 주석 처리 해서 카드박스 하나로 통일함-->
+        <div class="card-body ps-2"> <!--ps-2가 박스랑 간격 띄운거야 -->
+            <!-- 댓글 목록 반복 출력 -->
+            {% if question.comment_set|length >0 %}
+            <div class="mt-3">
+                {% for comment in question.comment_set %}
+                <div class="comment py-2 text-muted small border-top">
+                    <span style="white-space: pre-line;">{{ comment.content }} </span>
+                    <span>
+                        -<strong>{{ comment.user.username }}</strong>,{{comment.create_date|datetime}}
+                        {% if comment.modify_date %}
+                        (수정:{{ comment.modify_date|datetime }})
+                        {% endif%}
+                    </span>
+                    <!-- 댓글 작성자 본인 확인(수정/ 삭제 버튼) -->
+                    {% if g.user == comment.user %}
+                    <a href="{{ url_for('comment.modify_question', comment_id=comment.id)}}" class="small">수정</a>
+
+                    <a href="javascript:void(0)"
+                        data-uri="{{ url_for('comment.delete_question', comment_id=comment.id)}}"
+                        class="delete small">삭제</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- 질문 댓글 작성버튼(로그인 여부 체크) -->
+            <div class="mt-2">
+                {% if g.user %}
+                <a href="{{ url_for('comment.create_question', question_id=question.id) }}"
+                    class="small"><small>댓글추가..</small></a>
+                {% else %}
+                <small class="text-muted">댓글을 작성하려면 로그인하세요</small>
+                {% endif%}
+            </div>
+        </div>
+    </div>
+    <!-- 3. 답변개수 헤더-->
+    <h5 class="border-bottom my-3 py-2">{{ question.answer_set|length}}개의 답변이 있습니다.</h5>
+
+    <!-- 4. 답변 목록 시작(각 답변+ 답변벌 댓들이 들어가는곳) -->
+    {% for answer in question.answer_set%}
+    <div class="card my-3">
+        <div class="card-body">
+            <!-- 답변 내용 -->
+            <div class="card-text" style="white-space: pre-line;">{{answer.content}}</div>
+
+            <!-- 답변 작성자 작성, 시간 -->
+            <div class="d-flex justify-content-end">
+                <div class="badge text-bg-light p-2 mb-2 text-start">
+                    <div class="mb-2">{{ answer.user.username }} </div>
+                    <div class="mb-2">answered at</div>
+                    <div>{{answer.create_date|datetime}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 답변수정 삭제 생성버튼(답변 작성자 본인일때만 표시) 7/27 -->
+        {% if g.user == answer.user %}
+        <div class="my-3">
+            <a href="{{ url_for('answer.modify', answer_id=answer.id) }}"
+                class="btn btn-sm btn-outline-secondary">수정</a>
+            <a href="javascript:void(0)" data-uri="{{ url_for('answer.delete', answer_id=answer.id)}}"
+                class="delete btn btn-sm btn-outline-secondary">삭제</a>
+        </div>
+
+        {% endif %}
+        <!-- 여기에 7/28 부분 집어넣어야 되나봐 [질문 상세 템플릿에 답변 댓글 UI 연동] -->
+
+        <!-- <div class="mt-2"> -->
+        <div class="card-body ps-2">
+            {% if answer.comment_set|length > 0 %}
+            <div class="mt-3">
+                {% for comment in answer.comment_set %}
+                <div class="comment py-2 text-muted small border-top">
+                    <span style="white-space: pre-line;">{{ comment.content }}</span>
+                    <span>
+                        -<strong>{{ comment.user.username }}</strong>, {{ comment.create_date|datetime }}
+                        {% if comment.modify_date %}
+                        (수정 : {{ comment.modify_date|datetime }})
+                        {% endif %}
+                    </span>
+                    {% if g.user == comment.user %}
+                    <a href="{{ url_for('comment.modify_answer', comment_id=comment.id) }}" class="small">수정</a>
+                    <a href="javascript:void(0)" data-uri="{{url_for('comment.delete_answer', comment_id=comment.id)}}"
+                        class="delete small">삭제</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="mt-2">
+                <a href="{{ url_for('comment.create_answer', answer_id=answer.id)}}"
+                    class="small"><small>댓글추가..</small></a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    <!-- 5. 새 답변 작성폼  -->
+    <form action="{{url_for('answer.create', question_id=question.id) }}" method='post' class="my-3">
+
+        {{ form.csrf_token }}
+        <!-- 폼에러 메세지 표시 -->
+        {% if form.errors %}
+        <div class="alert alert-danger" role="alert">
+            {% for field, errors in form.errors.items() %}
+            <strong>{{ form[field].label }}</strong>
+            <ul>
+                {% for error in errors %}
+                <li> {{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <!-- 답변 입력상자 (미로그인 시 비활성화) -->
+
+        <div class="mb-3">
+            <!-- textarea에 disabled추가 7/26 닫는테그 안에 붙여야 함 -->
+            <textarea name="content" id="content" rows="10" class="form-control" {% if not g.user %}disabled{% endif
+                %}></textarea>
+        </div>
+        <input type="submit" value="답변등록" class="btn btn-primary">
+    </form>
+</div>
+{% endblock %}
+
+{% block script%}
+<script>
+    // 1.'recommend' 클래스를 가진 모든 추천 버튼 엘리먼트 수집
+    const recommend_elements= document.getElementsByClassName('recommend');
+    // 2. HTMLCollection을 배열로 변환 후 각각의 버튼에 반복문 실행
+    Array.from(recommend_elements).forEach(function(element){
+        // 3. 클릭 이벤트 발생 시 실행될 함수 등록
+        element.addEventListener('click',function(){
+            // 4. 정말로 추천할 것인지 확인 팝업창 출력
+            if (confirm("정말로 추천하시겠습니까?")){
+                // 5. [확인] 클릭 시 해당 버튼의 data-uri 값(추천 라우트)으로 이동
+                location.href = this.dataset.uri;
+            };
+        });
+    });
+</script>
+{% endblock %}
