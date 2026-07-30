@@ -21,6 +21,11 @@ class Question(db.Model):
     subject = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text(), nullable=False)
     create_date = db.Column(db.DateTime(), nullable=False)
+    # 이미지 저장경로 필드 추가 (7/30)
+    image_path=db.Column(db.String(200), nullable=True)
+
+    
+
     # 글쓴이 외래키 및 관계 설정 추가 (기존 데이터 고려 nullable=True 우선허용)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"), nullable=False)
     user = db.relationship('User', backref=db.backref('question_set'))

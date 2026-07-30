@@ -13,6 +13,32 @@
 
 <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"> -->
 <div class="container my-3">
+    
+    <div class="row my-3">
+      <div class="col-6">
+        <a href="{{url_for('question.create')}}" class="btn btn-primary">질문등록하기</a>       
+      </div>
+      <div class="col-6">
+        <div class="input-group">
+          <form method="get" id="searchForm" class="d-flex align-items-center justify-content-end">
+            <!-- 검색할때 1페이지로 리셋하기 위한 히든필드 -->
+            <input type="hidden" id="page" name="page" value="{{ page }}">
+
+            <select name="so" class="form-select me-2" style="width: auto; min-width: 110px;">
+            <option value="recent" {% if so=="recent" %}selected{% endif %}>최신순</option>
+            <option value="recommend" {% if so=="recommend" %}selected{% endif %}>추천순</option>
+            <option value="popular" {% if so=="popular" %}selected{% endif %}>인기순</option>
+            </select>
+
+            <!-- 스크립트에서 제어할 수 있도록 id= "search_kw" 추가 -->
+            <input type="text" id="search_kw" name="kw" value="{{ kw|default('')}}" class="form-control me-2" style="width: 430px;" placeholder="검색어 입력">
+
+            <!-- 스크립트 제어를 위해 id='btn-search'추가 및 type을 button으로 변경 -->
+            <button type="button" id="btn_search" class="btn btn-primary text-nowrap">검색</button>
+          </form>
+        </div>
+      </div>
+    </div>
   <table class="table table-striped">
     <thead>
       <tr class="table-dark">
@@ -89,6 +115,33 @@
           {% endif %}
   </ul>
 
-  <a href="{{url_for('question.create')}}" class="btn btn-primary">질문등록하기</a>
+
 </div>
+{% endblock %}
+{% block script %}
+<script type="text/javascript">
+  const page_elements = document.getElementsByClassName("page-link");
+  Array.from(page_elements).forEach(function(element){
+    element.addEventListener('click', function(){
+      document.getElementById('page').value=this.dataset.page;
+      document.getElementById('searchForm').submit();
+    });
+  });
+
+  const btn_search = document.getElementById("btn_search");
+  btn_search.addEventListener('click', function(){
+    // 검색 버튼을 클릭할 경우 페이지번호를 1로 초기화 합니다
+    document.getElementById('page').value = 1;
+
+    // 폼을 서브밋 합니다(form내부의 so와 kw가 함께 전송됩니다)
+    document.getElementById('searchForm').submit();    
+  });
+
+  // 정렬 조건(select)이 변경도면 헤이즐 1로 바꾸고 바로 검색 실행
+  const select_so = document.querySelector("#searchForm select[name='so']");
+  select_so.addEventListener('change', function(){
+    document.getElementById('page').value =1;
+    document.getElementById('searchForm').submit();
+  });
+</script>
 {% endblock %}

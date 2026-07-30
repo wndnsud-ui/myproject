@@ -2,7 +2,8 @@
 {% block content %}
 <div class="container">
     <h5 class="my-3 border-bottom pb-2">질문등록</h5>
-    <form action="#" method="post" class="my-3">
+    <!--novalidate enctype="multipart/form-data" 추가 (7/30) -->
+    <form action="#" method="post" class="my-3" novalidate enctype="multipart/form-data"> 
         {{ form.csrf_token }}
 
         {% if form.errors %}
@@ -26,6 +27,11 @@
             <label for="content" class="form-label">내용</label>
             <textarea class="form-control" id="content" name="content" rows="10">{{ form.content.data or ''}}</textarea>
         </div>
+        <!-- 아래 내용 추가 (7/30) -->
+        {{ form.image.label }}
+        {{ form.image(class="form-control")}}
+        <p>
+        <!-- 아래 내용 추가 끝(7/30) -->    
         <button class="btn btn-primary" type="submit">저장하기</button>
     </form>
 </div>

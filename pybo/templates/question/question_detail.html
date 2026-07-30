@@ -8,8 +8,19 @@
     <div class="card my-3">
         <div class="card-body">
             <!-- 질문 내용 -->
-            <div class="card-text" style="white-space: pre-line;">{{question.content}}</div>
-
+            <!-- <div class="card-text" style="white-space: pre-line;">{{question.content}}</div> -->
+             <!-- 질문 내용에 마크다운 적용 -->
+            <div class="card-text" >{{ question.content | trim | markdown }}</div>
+            <!-- 게시글 상세 페이지 이미지 표시(7/30) -->
+            <!-- 첨부 이미지 (있을때만)  -->
+             {% if question.image_path %}
+             <div class="my-3">
+                <img src="{{ url_for('static', filename=question.image_path) }}" alt="첨부이미지"
+                style="max-width: 100%; height: auto;"
+                class="img-thumbnail">   
+             </div>
+             {% endif %}
+            <!-- 게시글 상세 페이지 이미지 표시 끝(7/30) --> 
             <!-- 질문 작성자& 작성시간 -->
             <div class="d-flex justify-content-end">
                 <div class="badge text-bg-light p-2 text-start">
@@ -24,10 +35,10 @@
             <!-- 질문 수정/삭제 버튼 (글쓴이 본인일떄만 표시) (7/27) -->
             <div class="my-3">
                 <!-- 질문추천 버튼 만들기(7/28) -->
-                <a href="javascript:void(0)"
-                        data-uri="{{ url_for('question.vote',  question_id=question.id)}}" class="recommend btn btn-sm btn-outline-secondary">추천
-                        <!-- 추천수 뱃지 (추천인 인원수 표시) -->
-                    <span class="badge rounded-pill bg-success">{{  question.voter|length }}</span></a>
+                <a href="javascript:void(0)" data-uri="{{ url_for('question.vote',  question_id=question.id)}}"
+                    class="recommend btn btn-sm btn-outline-secondary">추천
+                    <!-- 추천수 뱃지 (추천인 인원수 표시) -->
+                    <span class="badge rounded-pill bg-success">{{ question.voter|length }}</span></a>
 
 
                 {% if g.user == question.user %}
@@ -47,8 +58,11 @@
         <div class="card-body ps-2"> <!--ps-2가 박스랑 간격 띄운거야 -->
             <!-- 댓글 목록 반복 출력 -->
             {% if question.comment_set|length >0 %}
+
             <div class="mt-3">
                 {% for comment in question.comment_set %}
+                <!-- 댓글에도 앵커추가(7/29) -->
+                <a name="comment_{{ comment.id }}"></a>
                 <div class="comment py-2 text-muted small border-top">
                     <span style="white-space: pre-line;">{{ comment.content }} </span>
                     <span>
@@ -81,16 +95,22 @@
             </div>
         </div>
     </div>
+    <!-- 답변 -->
     <!-- 3. 답변개수 헤더-->
     <h5 class="border-bottom my-3 py-2">{{ question.answer_set|length}}개의 답변이 있습니다.</h5>
 
-    <!-- 4. 답변 목록 시작(각 답변+ 답변벌 댓들이 들어가는곳) -->
+    <!-- 4. 답변 목록 시작(각 답변+ 답변벌 댓글이 들어가는곳) -->
     {% for answer in question.answer_set%}
+
+    <!-- 앵커 엘리먼트 추가(7/29) -->
+    <a name="answer_{{ answer.id }}"></a>
+
     <div class="card my-3">
         <div class="card-body">
             <!-- 답변 내용 -->
-            <div class="card-text" style="white-space: pre-line;">{{answer.content}}</div>
-
+            <!-- <div class="card-text" style="white-space: pre-line;">{{answer.content}}</div> -->
+            <!-- 답변 내용에 마크다운 적용(7/29) -->
+            <div class="card-text" >{{ answer.content | trim | markdown }}</div>
             <!-- 답변 작성자 작성, 시간 -->
             <div class="d-flex justify-content-end">
                 <div class="badge text-bg-light p-2 mb-2 text-start">
@@ -102,15 +122,22 @@
         </div>
 
         <!-- 답변수정 삭제 생성버튼(답변 작성자 본인일때만 표시) 7/27 -->
-        {% if g.user == answer.user %}
-        <div class="my-3">
+        <div class="my-3 ps-2">
+            <!-- 답변추천 버튼 만들기(7/28) -->
+            <a href="javascript:void(0)" data-uri="{{ url_for('answer.vote',  answer_id=answer.id)}}"
+                class="recommend btn btn-sm btn-outline-secondary">추천
+                <!-- 추천수 뱃지 (추천인 인원수 표시) -->
+                <span class="badge rounded-pill bg-success">{{answer.voter|length}}</span>
+            </a>
+            {% if g.user == answer.user %}
+            <!-- <span class="badge rounded-pill bg-success">{{ answer.voter|length }}</span></a> -->
             <a href="{{ url_for('answer.modify', answer_id=answer.id) }}"
                 class="btn btn-sm btn-outline-secondary">수정</a>
             <a href="javascript:void(0)" data-uri="{{ url_for('answer.delete', answer_id=answer.id)}}"
                 class="delete btn btn-sm btn-outline-secondary">삭제</a>
+            {% endif %}
         </div>
 
-        {% endif %}
         <!-- 여기에 7/28 부분 집어넣어야 되나봐 [질문 상세 템플릿에 답변 댓글 UI 연동] -->
 
         <!-- <div class="mt-2"> -->
@@ -118,6 +145,8 @@
             {% if answer.comment_set|length > 0 %}
             <div class="mt-3">
                 {% for comment in answer.comment_set %}
+                <!-- 답변댓글 앵커 추가 (7/29) -->
+                <a name="comment_{{ comment.id }}"></a>
                 <div class="comment py-2 text-muted small border-top">
                     <span style="white-space: pre-line;">{{ comment.content }}</span>
                     <span>
@@ -174,13 +203,16 @@
 {% block script%}
 <script>
     // 1.'recommend' 클래스를 가진 모든 추천 버튼 엘리먼트 수집
-    const recommend_elements= document.getElementsByClassName('recommend');
+    const recommend_elements = document.getElementsByClassName('recommend');
+
     // 2. HTMLCollection을 배열로 변환 후 각각의 버튼에 반복문 실행
-    Array.from(recommend_elements).forEach(function(element){
+    Array.from(recommend_elements).forEach(function (element) {
+
         // 3. 클릭 이벤트 발생 시 실행될 함수 등록
-        element.addEventListener('click',function(){
+        element.addEventListener('click', function () {
+
             // 4. 정말로 추천할 것인지 확인 팝업창 출력
-            if (confirm("정말로 추천하시겠습니까?")){
+            if (confirm("정말로 추천하시겠습니까?")) {
                 // 5. [확인] 클릭 시 해당 버튼의 data-uri 값(추천 라우트)으로 이동
                 location.href = this.dataset.uri;
             };
